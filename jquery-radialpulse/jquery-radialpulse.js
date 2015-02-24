@@ -68,8 +68,11 @@ if (!window["$"]) {
 	  		return true;
 	  	};
 
-	  	function radialPulse(evt) {
-	  		var target = evt.target;
+	  	// private 
+
+	  	function pulse(target) {
+	  		if (!$(target).hasClass("radial-pulse"))
+	  			return;
 	  		if (isNaN(options.numberOfRings))
 	  			options.numberOfRings = 1;
 	  		for (var i=0; i<options.numberOfRings; i++) {
@@ -77,22 +80,40 @@ if (!window["$"]) {
 	  		}
 	  	};
 
-	  	$.each($(self).find(".radial-pulse"), function(index, item) {
+	  	function radialPulse(evt) {
+	  		var target = evt.target;
+	  		pulse(target);
+	  	};
+
+	  	function getRadialPulseBehavior(target) {
 	  		var behavior = options.behavior;
-	  		if ($(this).attr("data-radial-pulse-behavior") == BEHAVIOR_ROLLOVER ||
-	  			$(this).attr("data-radial-pulse-behavior") == BEHAVIOR_ROLLOUT ||
-	  			$(this).attr("data-radial-pulse-behavior") == BEHAVIOR_CLICK) {
-	  			behavior = $(this).attr("data-radial-pulse-behavior");
+	  		if ($(target).attr("data-radial-pulse-behavior") == BEHAVIOR_ROLLOVER ||
+	  			$(target).attr("data-radial-pulse-behavior") == BEHAVIOR_ROLLOUT ||
+	  			$(target).attr("data-radial-pulse-behavior") == BEHAVIOR_CLICK) {
+	  			behavior = $(target).attr("data-radial-pulse-behavior");
 	  		}
+	  		return behavior;
+	  	};
+
+	  	// public
+
+	  	this.pulse = function() {
+	  		pulse(this);
+	  	};
+
+	  	// init
+
+	  	$.each($(self).find(".radial-pulse"), function(index, item) {
+	  		var behavior = getRadialPulseBehavior(item);
 	  		switch (behavior) {
 		  		case BEHAVIOR_ROLLOVER:
-		  			$(this).on('mouseenter.radialPulse', radialPulse);
+		  			$(item).on('mouseenter.radialPulse', radialPulse);
 		  			break;
 		  		case BEHAVIOR_ROLLOUT:
-		  			$(this).on('mouseleave.radialPulse', radialPulse);
+		  			$(item).on('mouseleave.radialPulse', radialPulse);
 		  			break;
 		  		case BEHAVIOR_CLICK:
-		  			$(this).on('click.radialPulse', radialPulse);
+		  			$(item).on('click.radialPulse', radialPulse);
 		  			break;
 		  		default:
 		  			console.log("jquery-radialpulse.js: Error >> Behavior type not accepted");
