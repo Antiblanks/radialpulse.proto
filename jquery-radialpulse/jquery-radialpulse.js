@@ -14,6 +14,7 @@ if (!window["$"]) {
   		var self = this;
   		var BEHAVIOR_ROLLOVER = "rollover";
   		var BEHAVIOR_ROLLOUT = "rollout";
+  		var BEHAVIOR_ROLLOVEROUT = "rolloverout";
   		var BEHAVIOR_CLICK = "click";
 
 	  	options = $.extend({
@@ -24,6 +25,8 @@ if (!window["$"]) {
 			"endScale": 7,
 			"numberOfRings": 5,
 			"behavior": "rollover",
+			"stopEventPropagation": false,
+			"preventEventDefault": false,
 			"radialImage": "img/radial.png",
 			"animationSpeed": 1000,
 			"animationEasing": "linear",
@@ -31,6 +34,7 @@ if (!window["$"]) {
 	  	}, options);
 
 	  	function spawnRadialPulse(target, delay) {
+	  		console.log("spawnRadialPulse", target, delay);
 	  		if ($(target).length == 0)
 	  			return false;
 	  		var radialImageTag = $("<img />")
@@ -71,6 +75,7 @@ if (!window["$"]) {
 	  	// private 
 
 	  	function pulse(target) {
+	  		console.log("pulse", target);
 	  		if (!$(target).hasClass("radial-pulse"))
 	  			return;
 	  		if (isNaN(options.numberOfRings))
@@ -82,7 +87,18 @@ if (!window["$"]) {
 
 	  	function radialPulse(evt) {
 	  		var target = evt.target;
+	  		if (!$(target).hasClass("radial-pulse"))
+	  			target = evt.currentTarget;
+	  		if (!$(target).hasClass("radial-pulse"))
+	  			return false;
 	  		pulse(target);
+	  		if (options.stopEventPropagation) {
+	  			evt.stopPropagation();
+	  		}
+	  		if (options.preventEventDefault) {
+	  			evt.preventDefault();
+	  		}
+	  		return true;
 	  	};
 
 	  	function getRadialPulseBehavior(target) {
@@ -95,15 +111,7 @@ if (!window["$"]) {
 	  		return behavior;
 	  	};
 
-	  	// public
-
-	  	this.pulse = function() {
-	  		pulse(this);
-	  	};
-
-	  	// init
-
-	  	$.each($(self).find(".radial-pulse"), function(index, item) {
+	  	function initRadialPulse(item) {
 	  		var behavior = getRadialPulseBehavior(item);
 	  		switch (behavior) {
 		  		case BEHAVIOR_ROLLOVER:
@@ -112,6 +120,10 @@ if (!window["$"]) {
 		  		case BEHAVIOR_ROLLOUT:
 		  			$(item).on('mouseleave.radialPulse', radialPulse);
 		  			break;
+		  		case BEHAVIOR_ROLLOVEROUT:
+			  		$(item).on('mouseenter.radialPulse', radialPulse);
+			  		$(item).on('mouseleave.radialPulse', radialPulse);
+		  			break;
 		  		case BEHAVIOR_CLICK:
 		  			$(item).on('click.radialPulse', radialPulse);
 		  			break;
@@ -119,7 +131,24 @@ if (!window["$"]) {
 		  			console.log("jquery-radialpulse.js: Error >> Behavior type not accepted");
 		  			return;
 		  	}
-	  	});
+	  	};
+
+	  	// public
+
+	  	this.pulse = function() {
+	  		pulse(this);
+	  	};
+
+	  	// init
+
+	  	if ($(self).find(".radial-pulse").length != 0) {
+	  		$.each($(self).find(".radial-pulse"), function(index, item) {
+		  		initRadialPulse(item);
+		  	});
+	  	}
+	  	else {
+	  		initRadialPulse(this);
+	  	}
 	    
 	    return self;
 	};
